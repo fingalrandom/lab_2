@@ -1,0 +1,178 @@
+AES128.infile.
+_____________
+__________
+____
+# -*- coding: cp1251 -*-
+import os
+import random
+import linecache
+import stat
+import time
+import datetime
+import shutil
+
+def _print(argStr):
+    print unicode(argStr, 'cp1251')
+
+# чтение строк файла в обратном порядке
+for line in reversed(open("C:\\boot.ini").readlines()):
+    print line
+# чтение строк файла в случайном порядке
+lines = open("C:\\boot.ini").readlines()
+random.shuffle(lines)
+for line in lines:
+    print line
+
+# чтение нужной строки файла по номеру
+line = linecache.getline("C:\\boot.ini", 2) # вторая строка
+print line
+line = open("C:\\boot.ini").readlines()[1] # вторая строка
+print line
+
+# чтение бинарного файла
+bmp_file = open("C:\WINDOWS\Web\Wallpaper\Безмятежность.bmp", "rb")
+buff = bmp_file.read(10) # первые 10 байт
+print buff
+print bmp_file.tell() # текущая позиция в файле.
+bmp_file.seek(0) # возврат в начало файла
+print bmp_file.tell()
+buff = bmp_file.read(2) # первые 2 байта
+print buff
+bmp_file.close()
+
+# запись бинарного файла
+bmp_file = open("C:\\WINDOWS\\Web\\Wallpaper\\Безмятежность.bmp", "rb")
+buff = bmp_file.read()
+bmp_file.close()
+bmp_file = open("C:\\Temp\\test.bmp", "wb")
+bmp_file.write(buff)
+bmp_file.close()
+
+# некоторые атрибуты файлов
+fstat = os.stat("C:\\boot.ini")
+print stat.S_ISDIR(fstat.st_mode) # признак папки
+print stat.S_ISREG(fstat.st_mode) # признак обычного файла
+print fstat.st_size # размер файла, в байтах
+st_atime = fstat.st_atime # время последнего доступа (число секунд с начала эпохи, 1970 г.)
+a,b,c,d,e,f,g,h,i = time.localtime(st_atime)
+print datetime.datetime(a,b,c,d,e,f,g)
+st_mtime = fstat.st_mtime # время последней модификации
+a,b,c,d,e,f,g,h,i = time.localtime(st_mtime)
+print datetime.datetime(a,b,c,d,e,f,g)
+st_ctime = fstat.st_ctime # время создания
+a,b,c,d,e,f,g,h,i = time.localtime(st_ctime)
+print datetime.datetime(a,b,c,d,e,f,g)
+
+# установка некоторых атрибутов
+open("C:\\Temp\\testfile.txt", "w").close()
+# задание текущего времени последнего доступа и модификации
+os.utime("C:\\Temp\\testfile.txt", None)
+# задание указанного времени последнего доступа и модификации
+os.utime("C:\\Temp\\testfile.txt", (1, 1))
+# снятие и установка атрибута "только чтение"
+os.chmod("C:\\Temp\\testfile.txt", stat.S_IREAD) # поставить read-only
+os.chmod("C:\\Temp\\testfile.txt", stat.S_IWRITE) # снять read-only
+
+# обработка ошибки удаления файла
+try:
+    os.remove("несущестувующий файл")
+except OSError, err:
+    _print("Ошибка удаления файла.")
+
+# перебор файлов в каталоге
+for filename in os.listdir("C:\\Temp\\Test"):
+    _print(filename)
+
+# поиск файлов по маске
+import glob
+[_print(filename) for filename in glob.glob("c:\\*.sys")]
+
+# рекурсивный перебор каталогов
+for root, dirs, files in os.walk("C:\\Temp\\Test"):
+    _print("root: " + root)
+    if len(dirs):
+        _print("dirs:")
+        [_print(dir) for dir in dirs]
+    if len(files):
+        _print("files:")
+        [_print(file) for file in files]
+
+# создание каталога
+os.mkdir("C:\\Temp\\Temp")
+os.mkdir("C:\\Temp\\Temp\\abcd")
+# удаление каталога со всем содержимым
+shutil.rmtree("C:\\Temp\\Temp") # осторожно!
+
+# переименование файла
+open("C:\\Temp\\testfile.txt", "w").close()
+os.rename("C:\\Temp\\testfile.txt", "C:\\Temp\\test.txt")
+
+# разбор пути (папка, имя файла, расширение)
+print os.path.basename("C:\\boot.ini")
+print os.path.dirname("C:\\boot.ini")
+print os.path.split("C:\\boot.ini")
+print os.path.splitext("boot.ini")
+# -*- coding: cp1251 -*-
+import os, sys, win32api, win32con
+
+def _print(argStr):
+    print unicode(argStr, 'cp1251')
+
+# определение каталога запущенного скрипта
+print os.path.realpath(os.path.dirname(sys.argv[0]))
+print os.path.realpath(os.path.dirname(sys.modules['__main__'].__file__))
+
+# чтение атрибутов файла
+attrs = win32api.GetFileAttributes("C:\\boot.ini")
+if attrs & win32con.FILE_ATTRIBUTE_READONLY: # 1
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_READONLY")
+if attrs & win32con.FILE_ATTRIBUTE_HIDDEN: # 2
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_HIDDEN")
+if attrs & win32con.FILE_ATTRIBUTE_SYSTEM: # 4
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_SYSTEM")
+if attrs & win32con.FILE_ATTRIBUTE_DIRECTORY: # 16
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_DIRECTORY")
+if attrs & win32con.FILE_ATTRIBUTE_ARCHIVE: # 32
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_ARCHIVE")
+if attrs & win32con.FILE_ATTRIBUTE_NORMAL: # 128
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_NORMAL")
+if attrs & win32con.FILE_ATTRIBUTE_TEMPORARY: # 256
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_TEMPORARY")
+if attrs & win32con.FILE_ATTRIBUTE_COMPRESSED: # 2048
+    _print("C:\\boot.ini - FILE_ATTRIBUTE_COMPRESSED")
+
+# установка атрибутов файла
+win32api.SetFileAttributes("C:\\boot.ini",
+    win32con.FILE_ATTRIBUTE_HIDDEN +
+    win32con.FILE_ATTRIBUTE_SYSTEM +
+    win32con.FILE_ATTRIBUTE_ARCHIVE)
+# -*- coding: cp1251 -*-
+import shutil, sys, os, datetime
+# каталог запущенного скрипта
+path = os.path.realpath(os.path.dirname(sys.argv[0]))
+# путь к файлу лога (рядом с самим скриптом, в той же папке)
+logpath = path + "\\backup.log"
+# открытие файла лога на добавление (если файла нет, он будет создан)
+logfile = open(logpath, "a")
+# записываем в лог текущие дату и время
+print >> logfile, datetime.datetime.now()
+print >> logfile, ''
+# копирование файла поверх существующего (бэкап)
+try:
+    shutil.copyfile("\\\\Comp1Name\\e$:\\Folder\\file.ext", "\\\\Comp2Name\\c$:\\Backups\\file.ext")
+    print >> logfile, "successfully"
+except:
+    print >> logfile, sys.exc_info()[0] # тип ошибки
+    print >> logfile, sys.exc_info()[1] # текст ошибки
+print >> logfile, '=================================================='
+logfile.close()
+import os
+
+def get_version_number (filename):
+    info = GetFileVersionInfo (filename, "\\")
+    ms = info['FileVersionMS']
+    ls = info['FileVersionLS']
+    return HIWORD (ms), LOWORD (ms), HIWORD (ls), LOWORD (ls)
+
+filename = "C:\\WINDOWS\\system32\\user32.dll"
+print ".".join ([str (i) for i in get_version_number (filename)])   
