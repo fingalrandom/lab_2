@@ -1,11 +1,4 @@
-ch = input('1. AES \n2. Decode\n')
-if ch == 1:
-	inv = False
-elif ch == 2:
-	inv = True
-else:
-	print('Error! Irregular number.')
-	exit()
+import sys
 def SybButes(mas, inv):
 	if not inv:
 		sbox = [
@@ -45,19 +38,19 @@ def SybButes(mas, inv):
 			0xa0, 0xe0, 0x3b, 0x4d, 0xae, 0x2a, 0xf5, 0xb0, 0xc8, 0xeb, 0xbb, 0x3c, 0x83, 0x53, 0x99, 0x61,
 			0x17, 0x2b, 0x04, 0x7e, 0xba, 0x77, 0xd6, 0x26, 0xe1, 0x69, 0x14, 0x63, 0x55, 0x21, 0x0c, 0x7d
 		]
-	for i in range(nb):
+	for i in range(4):
 		mas[i] = sbox[mas[i]]
 	return mas
 def ShiftRows(mas, inv):
 	if not inv:
-		for i in range(nb):
+		for i in range(4):
 			for j in range(i):
 				t = mas[i][0]
 				for m in range(3):
 					mas[i][m] = mas[i][m + 1]
 				mas[i][3] = t
 	else:
-		for i in range(nb):
+		for i in range(4):
 			for j in range(i):
 				t = mas[i][3]
 				for m in range(3, 0, -1):
@@ -66,7 +59,7 @@ def ShiftRows(mas, inv):
 	return mas
 def mix_columns(mas, inv):
 	if not inv:
-		for i in range(nb):
+		for i in range(4):
 			m0 = mul_by_02(mas[0][i]) ^ mul_by_03(mas[1][i]) ^ mas[2][i] ^ mas[3][i]
 			m1 = mas[0][i] ^ mul_by_02(mas[1][i]) ^ mul_by_03(mas[2][i]) ^ mas[3][i]
 			m2 = mas[0][i] ^ mas[1][i] ^ mul_by_02(mas[2][i]) ^ mul_by_03(mas[3][i])
@@ -76,7 +69,7 @@ def mix_columns(mas, inv):
 			mas[2][i] = m2
 			mas[3][i] = m3
 	else:
-		for i in range(nb):
+		for i in range(4):
 			m0 = mul_by_0e(mas[0][i]) ^ mul_by_0b(mas[1][i]) ^ mul_by_0d(mas[2][i]) ^ mul_by_09(mas[3][i])
 			m1 = mul_by_09(mas[0][i]) ^ mul_by_0e(mas[1][i]) ^ mul_by_0b(mas[2][i]) ^ mul_by_0d(mas[3][i])
 			m2 = mul_by_0d(mas[0][i]) ^ mul_by_09(mas[1][i]) ^ mul_by_0e(mas[2][i]) ^ mul_by_0b(mas[3][i])
@@ -108,21 +101,21 @@ def mul_by_0e(num):
 	return mul_by_08(num) ^ mul_by_04(num) ^ mul_by_02(num)
 def add_round_key(mas, rkey, round, inv):
 	if not inv:
-		for i in range(nb):
-			m0 = mas[0][i] ^ rkey[0][nb * round + i]
-			m1 = mas[1][i] ^ rkey[1][nb * round + i]
-			m2 = mas[2][i] ^ rkey[2][nb * round + i]
-			m3 = mas[3][i] ^ rkey[3][nb * round + i]
+		for i in range(4):
+			m0 = mas[0][i] ^ rkey[0][4 * round + i]
+			m1 = mas[1][i] ^ rkey[1][4 * round + i]
+			m2 = mas[2][i] ^ rkey[2][4 * round + i]
+			m3 = mas[3][i] ^ rkey[3][4 * round + i]
 			mas[0][i] = m0
 			mas[1][i] = m1
 			mas[2][i] = m2
 			mas[3][i] = m3
 	else:
-		for i in range(nb):
-			m0 = mas[0][i] ^ rkey[0][(10 - round) * nb + i]
-			m1 = mas[1][i] ^ rkey[1][(10 - round) * nb + i]
-			m2 = mas[2][i] ^ rkey[2][(10 - round) * nb + i]
-			m3 = mas[3][i] ^ rkey[3][(10 - round) * nb + i]
+		for i in range(4):
+			m0 = mas[0][i] ^ rkey[0][(10 - round) * 4 + i]
+			m1 = mas[1][i] ^ rkey[1][(10 - round) * 4 + i]
+			m2 = mas[2][i] ^ rkey[2][(10 - round) * 4 + i]
+			m3 = mas[3][i] ^ rkey[3][(10 - round) * 4 + i]
 			mas[0][i] = m0
 			mas[1][i] = m1
 			mas[2][i] = m2
@@ -135,14 +128,14 @@ def key_expansion(KEY):
         [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
         [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00],
         [0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]]
-	for i in range(nb):
+	for i in range(4):
 		col.append([])
-	for i in range(nb):
+	for i in range(4):
 		key_schedule.append([])
-		for j in range(11 * nb):
+		for j in range(11 * 4):
 			key_schedule[i].append([])
-	for i in range(nb):
-		for j in range(nb):
+	for i in range(4):
+		for j in range(4):
 			key_schedule[j][i] = ord(KEY[j + 4 * i])
 	for i in range(4, 11 * 4):
 		if not (i % 4):
@@ -150,92 +143,117 @@ def key_expansion(KEY):
 				col[j] = key_schedule[j + 1][i - 1]
 			col[3] = key_schedule[0][i - 1]
 			col = SybButes(col, False)
-			for j in range(nb):
+			for j in range(4):
 				key_schedule[j][i] = key_schedule[j][i - 4] ^ col[j] ^ rcon[j][i / 4 - 1]
 		else:
-			for j in range(nb):
+			for j in range(4):
 				key_schedule[j][i] = key_schedule[j][i - 4] ^ key_schedule[j][i - 1]
 	return key_schedule
 
-inTXT = raw_input('Enter the name of text file(*.txt): ')
-keyTXT = raw_input('Enter the name of key file(*.txt): ')
-rezTXT = raw_input('Enter the name of result file(*.txt): ')
-try:
-	inFile = open(inTXT,"rb")
-	keyFile = open(keyTXT,"rb")
-except IOError:
-	print('File not open')
-	exit()
-TXT = inFile.read()
-KEY = keyFile.read()
-TXTlen = len(TXT)
-KEYlen = len(KEY)
-if (KEYlen < 16):
-	while(KEYlen != 16):
-		KEY = KEY + chr(0x01)
-		KEYlen = KEYlen + 1
-nb = 4
-round = 0
+def crypt(TXT, KEY, inv):
+	TXTlen = len(TXT)
+	KEYlen = len(KEY)
+	if (KEYlen < 16):
+		while(KEYlen != 16):
+			KEY = KEY + chr(0x01)
+			KEYlen = KEYlen + 1
+	nb = 4
+	round = 0
+	rez = '';res2 = ""
 
-if not TXTlen % 0x10:
-	cur_state = int(TXTlen / 0x10)
-	state = []
-	for i in range(cur_state):
-		state.append([])
-		for j in range(nb):
-			state[i].append([])
-			for m in range(nb):
-				state[i][j].append(ord(TXT[j + nb * m + 16 * i]))
-else:
-	cur_state = TXTlen / 0x10 + 1
-	state = []
-	for i in range(cur_state):
-		state.append([])
-		for j in range(nb):
-			state[i].append([])
-			for m in range(nb):
-				state[i][j].append([])
-	for i in range(TXTlen):
-		state[i / 0x10][i % 4][(i % 0x10) / 4] = ord(TXT[i])
-	for i in range(TXTlen, cur_state * 0x10 - 1):
-		state[i / 0x10][i % 4][(i % 0x10) / 4] = 0
-	state[cur_state - 1][3][3] = 0x01
-	
-print cur_state
+	if not TXTlen % 0x10:
+		cur_state = int(TXTlen / 0x10)
+		state = []
+		for i in range(cur_state):
+			state.append([])
+			for j in range(nb):
+				state[i].append([])
+				for m in range(nb):
+					state[i][j].append(ord(TXT[j + nb * m + 16 * i]))
+	else:
+		cur_state = TXTlen / 0x10 + 1
+		state = []
+		for i in range(cur_state):
+			state.append([])
+			for j in range(nb):
+				state[i].append([])
+				for m in range(nb):
+					state[i][j].append([])
+		for i in range(TXTlen):
+			state[i / 0x10][i % 4][(i % 0x10) / 4] = ord(TXT[i])
+		for i in range(TXTlen, cur_state * 0x10 - 1):
+			state[i / 0x10][i % 4][(i % 0x10) / 4] = 0
+		state[cur_state - 1][3][3] = 0x01
 
-rkey = key_expansion(KEY)
-for i in range(cur_state):
-		state[i] = add_round_key(state[i], rkey, round, inv)
-for i in range(9):
+	rkey = key_expansion(KEY)
+	for i in range(cur_state):
+			state[i] = add_round_key(state[i], rkey, round, inv)
+	for i in range(9):
+		round = round + 1
+		for i in range(cur_state):
+			for j in range(nb):
+				state[i][j] = SybButes(state[i][j], inv)
+		for i in range(cur_state):
+			state[i] = ShiftRows(state[i], inv)
+		if not inv:
+			for i in range(cur_state):
+				state[i] = mix_columns(state[i], inv)
+			for i in range(cur_state):
+				state[i] = add_round_key(state[i], rkey, round, inv)
+		else:
+			for i in range(cur_state):
+				state[i] = add_round_key(state[i], rkey, round, inv)
+			for i in range(cur_state):
+				state[i] = mix_columns(state[i], inv)
 	round = round + 1
 	for i in range(cur_state):
 		for j in range(nb):
 			state[i][j] = SybButes(state[i][j], inv)
 	for i in range(cur_state):
 		state[i] = ShiftRows(state[i], inv)
-	if not inv:
-		for i in range(cur_state):
-			state[i] = mix_columns(state[i], inv)
-		for i in range(cur_state):
-			state[i] = add_round_key(state[i], rkey, round, inv)
+	for i in range(cur_state):
+		state[i] = add_round_key(state[i], rkey, round, inv)
+	
+	for i in range(cur_state * 0x10):
+		rez = rez + chr(state[i / 0x10][i % 4][(i % 16) / 4])
+	if inv:
+		if ord(rez[len(rez) - 1]) == 0x01:
+			resLen = len(rez) - 1
+			point = len(rez) - 2
+			while ord(rez[point]) == 0x00:
+				point = point - 1
+				resLen = resLen - 1
+			for i in range(resLen):
+				res2 += rez[i]
+			return res2
+	return rez
+def main():
+	print "Example of main string:"
+	print "[*.py] [input file name] [key file name] [result file name] [encode or decode]"
+	print "	""-c"" - encode"
+	print "	""-d"" - decode"
+	countPar = len(sys.argv)
+	if (countPar != 5):
+		print "There is wrong number of parameters."
+		exit()
+	if(sys.argv[4] != "-c" and sys.argv[4] != "-d"):
+		print "irregular operation"
+		exit()
+
+	inFileName = sys.argv[1]
+	keyFileName = sys.argv[2]
+	rezFileName = sys.argv[3]
+	fl = sys.argv[4]
+
+	with open(inFileName, 'r') as inFile:
+		TXT = inFile.read()
+	with open(keyFileName, 'r') as keyFile:
+		KEY = keyFile.read()
+	if fl == '-c':
+		rez = crypt(TXT, KEY, False)
 	else:
-		for i in range(cur_state):
-			state[i] = add_round_key(state[i], rkey, round, inv)
-		for i in range(cur_state):
-			state[i] = mix_columns(state[i], inv)
-round = round + 1
-for i in range(cur_state):
-	for j in range(nb):
-		state[i][j] = SybButes(state[i][j], inv)
-for i in range(cur_state):
-	state[i] = ShiftRows(state[i], inv)
-for i in range(cur_state):
-	state[i] = add_round_key(state[i], rkey, round, inv)
-rezFile = open(rezTXT, 'wb')
-for i in range(int(cur_state)):
-	for j in range(nb):
-		for m in range(nb):
-			rezFile.write(chr(state[i][m][j]))
-rezFile.close()
-inFile.close()
-keyFile.close()
+		rez = crypt(TXT, KEY, True)
+	with open(rezFileName, 'w') as rezFile:
+		rezFile.write(rez)
+if __name__ == "__main__":
+    main()
